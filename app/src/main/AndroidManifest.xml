@@ -28,10 +28,6 @@
             android:name=".IconDemoActivity"
             android:exported="false" />
 
-        <activity
-            android:name=".IconTestActivity"
-            android:exported="false" />
-
     </application>
 
 </manifest>
