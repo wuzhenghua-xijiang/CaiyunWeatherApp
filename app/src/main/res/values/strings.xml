@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">彩云天气</string>
+    <string name="loading">加载中...</string>
+    <string name="load_failed">加载失败，请检查网络连接</string>
+    <string name="temperature">温度</string>
+    <string name="weather">天气</string>
+    <string name="time">时间</string>
+    <string name="hourly_forecast">24小时预报</string>
+</resources>

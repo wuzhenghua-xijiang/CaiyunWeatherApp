@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Material Design 3 主题色 -->
+    <color name="primary">#6750A4</color>
+    <color name="on_primary">#FFFFFF</color>
+    <color name="primary_container">#EADDFF</color>
+    <color name="on_primary_container">#21005D</color>
+    
+    <color name="secondary">#625B71</color>
+    <color name="on_secondary">#FFFFFF</color>
+    <color name="secondary_container">#E8DEF8</color>
+    <color name="on_secondary_container">#1D192B</color>
+    
+    <color name="tertiary">#7D5260</color>
+    <color name="on_tertiary">#FFFFFF</color>
+    <color name="tertiary_container">#FFD8E4</color>
+    <color name="on_tertiary_container">#31111D</color>
+    
+    <color name="error">#B3261E</color>
+    <color name="on_error">#FFFFFF</color>
+    <color name="error_container">#F9DEDC</color>
+    <color name="on_error_container">#410E0B</color>
+    
+    <color name="background">#FFFBFE</color>
+    <color name="on_background">#1C1B1F</color>
+    
+    <color name="surface">#FFFBFE</color>
+    <color name="on_surface">#1C1B1F</color>
+    <color name="surface_variant">#E7E0EC</color>
+    <color name="on_surface_variant">#49454F</color>
+    
+    <color name="outline">#79747E</color>
+    <color name="outline_variant">#CAC4D0</color>
+    
+    <color name="shadow">#000000</color>
+    <color name="scrim">#000000</color>
+    
+    <color name="inverse_surface">#313033</color>
+    <color name="inverse_on_surface">#F4EFF4</color>
+    <color name="inverse_primary">#D0BCFF</color>
+    
+    <!-- 天气相关颜色 -->
+    <color name="blue_sky">#87CEEB</color>
+    <color name="sunny">#FFD700</color>
+    <color name="cloudy">#78909C</color>
+    <color name="rainy">#4682B4</color>
+    
+    <!-- 图标着色颜色 -->
+    <color name="icon_tint">@color/primary</color>
+    
+    <!-- 为不同天气类型定义专门的颜色 -->
+    <color name="icon_sunny">@color/sunny</color>
+    <color name="icon_cloudy">@color/cloudy</color>
+    <color name="icon_rainy">@color/rainy</color>
+    <color name="icon_snowy">@color/surface_variant</color>
+    <color name="icon_storm">#304FFE</color>
+</resources>
