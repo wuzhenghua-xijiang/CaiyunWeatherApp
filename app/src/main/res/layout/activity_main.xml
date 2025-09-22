@@ -18,15 +18,45 @@
         android:gravity="center"
         android:layout_marginBottom="16dp" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/demo_button"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="查看所有天气图标"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/demo_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="查看所有天气图标"
+            android:layout_marginEnd="8dp"
+            android:padding="16dp"
+            android:textSize="14sp"
+            app:cornerRadius="12dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/toggle_method_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="切换到MCP模式"
+            android:layout_marginStart="8dp"
+            android:padding="16dp"
+            android:textSize="14sp"
+            app:cornerRadius="12dp" />
+
+    </LinearLayout>
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/current_method_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="当前使用: DeepSeek Function Calling"
+        android:gravity="center"
         android:layout_marginBottom="16dp"
-        android:padding="16dp"
         android:textSize="16sp"
-        app:cornerRadius="12dp" />
+        android:textStyle="bold" />
 
     <ProgressBar
         android:id="@+id/progress_bar"

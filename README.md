@@ -1,55 +1,117 @@
 # CaiyunWeatherApp
 
-## 项目概述
-这是一个基于Android的天气应用，使用彩云天气API获取天气数据，并结合DeepSeek AI的Function Calling功能来处理天气预报请求。应用主要展示24小时天气预报信息。
+彩云天气应用，支持通过DeepSeek Function Calling和MCP两种方式获取天气数据。
 
-## 核心功能
-1. **天气预报展示**：显示24小时内的天气预报信息，包括时间、温度、天气状况等
-2. **天气图标演示**：提供所有天气图标的可视化展示界面
-3. **AI集成**：通过DeepSeek的Function Calling功能调用彩云天气API
-4. **数据可视化**：使用RecyclerView展示结构化的天气数据
+## 功能特点
+
+1. **双模式支持**：
+   - DeepSeek Function Calling模式：使用DeepSeek AI模型直接调用彩云天气API
+   - MCP模式：使用DeepSeek AI模型通过MCP协议调用天气工具
+
+2. **24小时天气预报**：显示未来24小时的天气信息
+
+3. **丰富的天气图标**：提供多种天气状况的图标展示
+
+4. **错误处理机制**：完善的错误处理和重试机制
 
 ## 技术架构
-- **开发语言**：Java
-- **最低SDK版本**：24 (Android 7.0)
-- **目标SDK版本**：34 (Android 14)
-- **UI框架**：Material Design 3
+
 - **网络请求**：Retrofit + OkHttp
 - **JSON解析**：Gson
-- **异步处理**：OkHttp异步请求
+- **UI框架**：Material Design Components
+- **MCP服务器**：NanoHttpd
+- **异步处理**：CompletableFuture (Android兼容)
 
-## 主要组件
+## 使用方法
 
-### 核心类
-- `MainActivity`：主界面，负责展示24小时天气预报
-- `IconDemoActivity`：天气图标演示界面
-- `DeepSeekFunctionCaller`：处理与DeepSeek AI的交互和Function Calling
-- `WeatherService`：管理彩云天气和DeepSeek API的服务类
+1. **切换模式**：
+   - 应用默认使用DeepSeek Function Calling模式
+   - 点击"切换到MCP模式"按钮切换到MCP模式
+   - 点击"切换到DeepSeek模式"按钮切换回DeepSeek模式
 
-### 数据模型
-- `HourlyWeather`：小时天气数据模型
-- `WeatherResponse`：彩云天气API响应数据模型
+2. **查看天气图标**：
+   - 点击"查看所有天气图标"按钮查看所有可用的天气图标
 
-### UI组件
-- `HourlyWeatherAdapter`：RecyclerView适配器，用于展示小时天气数据
-- 使用CardView展示每个小时的天气信息
-- 包含丰富的天气图标资源（晴天、多云、雨天、雪天等）
+## MCP模式工作原理
 
-### 网络API
-- `CaiyunWeatherApi`：彩云天气API接口
-- `DeepSeekApi`：DeepSeek AI API接口
+MCP (Model Context Protocol) 是一种允许AI模型与工具交互的协议。在本应用中：
 
-## 项目特点
-1. **Material Design 3**：遵循最新的Material Design设计规范
-2. **图标着色**：使用tint属性为不同天气类型设置专门颜色
-3. **错误处理**：完善的网络错误处理和重试机制
-4. **容错设计**：当API不可用时显示模拟数据
-5. **响应式UI**：使用RecyclerView实现流畅的列表展示
+1. **正确的工作流程**：
+   - 用户询问天气："北京最近24小时的天气怎么样？"
+   - DeepSeek AI模型识别出需要获取天气信息
+   - DeepSeek通过Function Calling识别需要调用get_weather_forecast工具
+   - 应用检测到需要调用MCP模式的工具，从工具参数中提取位置信息
+   - 应用调用MCP服务器获取指定位置的天气数据
+   - MCP服务器调用彩云天气API获取真实数据
+   - 天气数据返回给应用，再传递给DeepSeek AI模型
+   - DeepSeek AI模型基于数据生成自然语言输出结果
+   - AI将结果返回给客户端
+
+2. **MCP生态系统**：
+   ```mermaid
+   flowchart TD
+       A[用户提问<br>北京天气怎么样] --> B[DeepSeek等AI模型]
+       
+       subgraph MCP生态 [MCP生态系统]
+           direction LR
+           C[MCP Client<br>集成在AI应用内]
+           D[(工具列表<br>动态发现)]
+           C <--> D
+           C <-- 标准MCP协议 --> E[MCP Server<br>独立进程<br>如: 天气服务器]
+       end
+
+       B -- 判断需要调用工具 --> C
+       C -- 转发天气请求 --> E
+       E -- 返回标准化天气数据 --> C
+       C -- 将数据注入模型上下文 --> B
+       
+       B -- 生成自然语言回复 --> F[回复用户<br>北京今天晴, 25°C...]
+   ```
+
+3. **MCP服务器**：
+   - 使用NanoHttpd在Android设备上启动HTTP服务器
+   - 监听端口8080
+   - 提供天气查询工具
+
+4. **工具调用流程**：
+   ```
+   用户 -> DeepSeek AI -> Function Calling识别 -> 应用调用MCP服务器 -> 彩云天气API -> 返回数据 -> DeepSeek AI -> 自然语言结果 -> 用户
+   ```
+
+## 配置说明
+
+1. **DeepSeek API密钥**：
+   - 在`DeepSeekFunctionCaller.java`中设置`DEEPSEEK_API_KEY`
+
+2. **彩云天气Token**：
+   - 在`McpServer.java`中设置`YOUR_CAIYUN_APP_TOKEN`
+
+## 项目结构
+
+```
+app/
+├── src/main/java/com/example/caiyunweather/
+│   ├── MainActivity.java          # 主界面
+│   ├── IconDemoActivity.java      # 图标展示界面
+│   ├── adapter/                   # RecyclerView适配器
+│   ├── api/                       # API接口定义
+│   ├── model/                     # 数据模型
+│   └── utils/                     # 工具类
+│       ├── DeepSeekFunctionCaller.java  # DeepSeek调用器
+│       ├── McpServer.java         # MCP服务器
+│       └── McpClient.java         # MCP客户端(用于测试)
+└── src/main/res/                  # 资源文件
+```
 
 ## 依赖库
-- AndroidX AppCompat
-- Material Design Components
-- RecyclerView
-- Retrofit 2.9.0
-- Gson Converter 2.9.0
-- OkHttp Logging Interceptor 4.9.0
+
+- Retrofit: 网络请求库
+- Gson: JSON解析库
+- NanoHttpd: 轻量级HTTP服务器
+- CompletableFuture: 异步编程支持
+
+## 注意事项
+
+1. 应用需要网络权限才能获取天气数据
+2. 确保已正确设置API密钥和Token
+3. MCP服务器在应用启动时自动启动，在应用销毁时自动停止

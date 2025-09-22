@@ -39,6 +39,12 @@ dependencies {
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.9.0'
     
+    // NanoHttpd服务器
+    implementation 'org.nanohttpd:nanohttpd:2.3.1'
+
+    // CompletableFuture支持 (Android API < 24)
+    implementation 'net.sourceforge.streamsupport:streamsupport-cfuture:1.7.4'
+    
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'

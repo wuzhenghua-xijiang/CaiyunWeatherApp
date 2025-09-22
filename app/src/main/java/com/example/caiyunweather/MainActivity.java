@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.caiyunweather.adapter.HourlyWeatherAdapter;
 import com.example.caiyunweather.model.HourlyWeather;
 import com.example.caiyunweather.utils.DeepSeekFunctionCaller;
+import com.example.caiyunweather.utils.McpServer;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -29,13 +30,19 @@ import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
     private static final String LOCATION = "北京"; // 默认位置
+    private static final int METHOD_DEEPSEEK = 0;
+    private static final int METHOD_MCP = 1;
     
     private RecyclerView weatherRecyclerView;
     private ProgressBar progressBar;
     private TextView errorText;
     private Button demoButton;
+    private Button toggleMethodButton;
+    private TextView currentMethodText;
     private HourlyWeatherAdapter adapter;
     private List<HourlyWeather> hourlyWeatherList;
+    private McpServer mcpServer;
+    private int currentMethod = METHOD_DEEPSEEK; // 默认使用DeepSeek方式
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +59,8 @@ public class MainActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progress_bar);
         errorText = findViewById(R.id.error_text);
         demoButton = findViewById(R.id.demo_button);
+        toggleMethodButton = findViewById(R.id.toggle_method_button);
+        currentMethodText = findViewById(R.id.current_method_text);
         
         demoButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -60,6 +69,16 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+        
+        toggleMethodButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                toggleMethod();
+            }
+        });
+        
+        // 初始化并启动MCP服务器
+        initMcpServer();
     }
     
     private void initRecyclerView() {
@@ -69,31 +88,71 @@ public class MainActivity extends AppCompatActivity {
         weatherRecyclerView.setAdapter(adapter);
     }
     
+    private void initMcpServer() {
+        mcpServer = McpServer.getInstance();
+        mcpServer.startServer();
+    }
+    
+    private void toggleMethod() {
+        if (currentMethod == METHOD_DEEPSEEK) {
+            currentMethod = METHOD_MCP;
+            toggleMethodButton.setText("切换到DeepSeek模式");
+            currentMethodText.setText("当前使用: MCP模式");
+        } else {
+            currentMethod = METHOD_DEEPSEEK;
+            toggleMethodButton.setText("切换到MCP模式");
+            currentMethodText.setText("当前使用: DeepSeek Function Calling");
+        }
+        
+        // 重新加载数据
+        loadWeatherData();
+    }
+    
     private void loadWeatherData() {
         showLoading();
         
-        // 使用DeepSeek Function Calling获取天气数据
-        DeepSeekFunctionCaller.getWeatherForecast(LOCATION, new DeepSeekFunctionCaller.WeatherCallback() {
-            @Override
-            public void onSuccess(String weatherData) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        parseWeatherData(weatherData);
-                    }
-                });
-            }
-            
-            @Override
-            public void onError(String error) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        showError(error);
-                    }
-                });
-            }
-        });
+        if (currentMethod == METHOD_DEEPSEEK) {
+            // 使用DeepSeek Function Calling获取天气数据
+            DeepSeekFunctionCaller.getWeatherForecast(LOCATION, false, new DeepSeekFunctionCaller.WeatherCallback() {
+                @Override
+                public void onSuccess(String weatherData) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            parseWeatherData(weatherData);
+                        }
+                    });
+                }
+                
+                @Override
+                public void onError(String error) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            showError(error);
+                        }
+                    });
+                }
+            });
+        } else {
+            // 使用MCP模式获取天气数据
+            DeepSeekFunctionCaller.getWeatherForecast(LOCATION, true, new DeepSeekFunctionCaller.WeatherCallback() {
+                @Override
+                public void onSuccess(String weatherData) {
+                    runOnUiThread(() -> parseWeatherData(weatherData));
+                }
+                
+                @Override
+                public void onError(String error) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            showError(error);
+                        }
+                    });
+                }
+            });
+        }
     }
     
     private void parseWeatherData(String weatherData) {
@@ -400,4 +459,12 @@ public class MainActivity extends AppCompatActivity {
         weatherRecyclerView.setVisibility(View.VISIBLE);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // 停止MCP服务器
+        if (mcpServer != null) {
+            mcpServer.stopServer();
+        }
+    }
 }
