@@ -103,42 +103,6 @@ public class McpClient {
         });
     }
     
-    /**
-     * 获取天气预报数据
-     */
-    public CompletableFuture<JsonObject> getWeatherForecast(String location) {
-        Log.d(TAG, "getWeatherForecast: location " + location);
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                JsonObject arguments = new JsonObject();
-                arguments.addProperty("location", location);
-                
-                return callTool("get_weather_forecast", arguments).get();
-            } catch (Exception e) {
-                Log.e(TAG, "获取天气预报数据失败", e);
-                throw new RuntimeException(e);
-            }
-        });
-    }
-    
-    /**
-     * 获取AI天气建议
-     */
-    public CompletableFuture<JsonObject> getAiWeatherAdvice(String weatherData) {
-        Log.d(TAG, "getAiWeatherAdvice: weatherData " + weatherData);
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                JsonObject arguments = new JsonObject();
-                arguments.addProperty("weather_data", weatherData);
-                
-                return callTool("get_ai_weather_advice", arguments).get();
-            } catch (Exception e) {
-                Log.e(TAG, "获取AI天气建议失败", e);
-                throw new RuntimeException(e);
-            }
-        });
-    }
-    
     private JsonObject sendRequest(JsonObject requestJson) throws IOException {
         String json = gson.toJson(requestJson);
         RequestBody body = RequestBody.create(json, MediaType.get("application/json"));

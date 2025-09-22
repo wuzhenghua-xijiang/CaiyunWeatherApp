@@ -88,7 +88,7 @@ public class McpServer extends NanoHTTPD {
     
     private void startKeepAliveTask() {
         scheduler = Executors.newSingleThreadScheduledExecutor();
-        scheduler.scheduleAtFixedRate(() -> {
+        scheduler.scheduleWithFixedDelay(() -> {
             // 定期任务，保持服务器活跃
             Log.d(TAG, "MCP服务器运行中...");
         }, 30, 30, TimeUnit.SECONDS);

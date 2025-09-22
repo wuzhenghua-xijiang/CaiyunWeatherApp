@@ -110,7 +110,7 @@ public class DeepSeekFunctionCaller {
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url("https://api.deepseek.com/chat/completions")
                 .post(body)
-                .addHeader("Authorization", "Bearer " + DEEPSEEK_API_KEY)
+                .addHeader("Authorization", "Bearer " + getApiKey())
                 .addHeader("Content-Type", "application/json")
                 .build();
         
@@ -187,7 +187,6 @@ public class DeepSeekFunctionCaller {
             JsonObject choice = choices.get(0).getAsJsonObject();
             JsonObject message = choice.getAsJsonObject("message");
 
-            Log.d("BBBB", "handleMcpFunctionCallResponse: choice " + choice + " message " + message);
             // 检查是否有工具调用
             if (message.has("tool_calls") && !message.get("tool_calls").isJsonNull()) {
                 JsonArray toolCalls = message.getAsJsonArray("tool_calls");
