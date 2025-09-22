@@ -1,0 +1,5 @@
+# DeepSeek API密钥
+deepseek.api.key=YOUR_DEEPSEEK_API_KEY
+
+# 彩云天气API Token
+caiyun.weather.token=YOUR_CAIYUN_WEATHER_TOKEN

@@ -49,6 +49,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         
+        // 设置应用上下文
+        DeepSeekFunctionCaller.setAppContext(this);
+        
         initViews();
         initRecyclerView();
         loadWeatherData();
@@ -90,6 +93,7 @@ public class MainActivity extends AppCompatActivity {
     
     private void initMcpServer() {
         mcpServer = McpServer.getInstance();
+        mcpServer.setAppContext(this);
         mcpServer.startServer();
     }
     

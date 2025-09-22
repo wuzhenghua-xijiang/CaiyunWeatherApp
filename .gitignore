@@ -78,3 +78,6 @@ lint/intermediates/
 # Temporary files
 *.tmp
 *.temp
+
+# API密钥配置文件
+api_keys.properties

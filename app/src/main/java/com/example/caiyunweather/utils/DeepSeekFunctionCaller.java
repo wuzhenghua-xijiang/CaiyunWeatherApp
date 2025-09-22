@@ -1,5 +1,6 @@
 package com.example.caiyunweather.utils;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.example.caiyunweather.api.WeatherService;
@@ -23,15 +24,40 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class DeepSeekFunctionCaller {
-    private static final String DEEPSEEK_API_KEY = "sk-04c1397b477d4d0daa2779c1b6310daf"; // 请替换为您的DeepSeek API密钥
+    private static final String DEEPSEEK_API_KEY = "YOUR_DEEPSEEK_API_KEY"; // 请替换为您的DeepSeek API密钥
     private static final String FUNCTION_NAME = "get_caiyun_weather"; // 保持下划线命名以匹配实际函数
     private static final String MCP_FUNCTION_NAME = "get_weather_forecast"; // MCP模式下的函数名
+    
+    // 添加上下文引用，用于获取API密钥
+    private static Context appContext;
     
     public interface WeatherCallback {
         void onSuccess(String weatherData);
         void onError(String error);
     }
     
+    /**
+     * 设置应用上下文
+     * @param context 应用上下文
+     */
+    public static void setAppContext(Context context) {
+        appContext = context.getApplicationContext();
+    }
+    
+    /**
+     * 获取DeepSeek API密钥
+     * @return API密钥
+     */
+    private static String getApiKey() {
+        if (appContext != null) {
+            String key = ApiKeyManager.getInstance(appContext).getDeepSeekApiKey();
+            if (key != null && !key.isEmpty() && !key.equals("YOUR_DEEPSEEK_API_KEY")) {
+                return key;
+            }
+        }
+        return DEEPSEEK_API_KEY;
+    }
+
     /**
      * 通过DeepSeek Function Calling获取天气预报
      * @param location 位置信息，例如"北京"
@@ -306,7 +332,7 @@ public class DeepSeekFunctionCaller {
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url("https://api.deepseek.com/chat/completions")
                 .post(body)
-                .addHeader("Authorization", "Bearer " + DEEPSEEK_API_KEY)
+                .addHeader("Authorization", "Bearer " + getApiKey())
                 .addHeader("Content-Type", "application/json")
                 .build();
         
@@ -517,7 +543,15 @@ public class DeepSeekFunctionCaller {
         // 获取位置信息（这里使用北京的经纬度作为示例）
         double longitude = 116.4074; // 北京经度
         double latitude = 39.9042;   // 北京纬度
-        String token = "QcevZCCHjrbDtgsP"; // 彩云天气免费token
+        String token = "YOUR_CAIYUN_WEATHER_TOKEN"; // 彩云天气免费token
+        
+        // 如果应用上下文可用，尝试从配置文件中获取token
+        if (appContext != null) {
+            String configToken = ApiKeyManager.getInstance(appContext).getCaiyunWeatherToken();
+            if (configToken != null && !configToken.isEmpty() && !configToken.equals("YOUR_CAIYUN_WEATHER_TOKEN")) {
+                token = configToken;
+            }
+        }
         
         // 调用彩云天气API
         Call<ResponseBody> call = WeatherService.getInstance().getCaiyunApi()

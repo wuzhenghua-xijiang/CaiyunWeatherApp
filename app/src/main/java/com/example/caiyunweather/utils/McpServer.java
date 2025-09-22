@@ -1,5 +1,6 @@
 package com.example.caiyunweather.utils;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -26,6 +27,7 @@ public class McpServer extends NanoHTTPD {
     private final Gson gson = new Gson();
     private final OkHttpClient client = new OkHttpClient();
     private ScheduledExecutorService scheduler;
+    private Context appContext;
     
     private McpServer() {
         super("127.0.0.1", PORT);  // 明确指定绑定地址
@@ -38,6 +40,28 @@ public class McpServer extends NanoHTTPD {
         return instance;
     }
     
+    /**
+     * 设置应用上下文
+     * @param context 应用上下文
+     */
+    public void setAppContext(Context context) {
+        this.appContext = context.getApplicationContext();
+    }
+    
+    /**
+     * 获取彩云天气Token
+     * @return 彩云天气Token
+     */
+    private String getCaiyunWeatherToken() {
+        if (appContext != null) {
+            String token = ApiKeyManager.getInstance(appContext).getCaiyunWeatherToken();
+            if (token != null && !token.isEmpty() && !token.equals("YOUR_CAIYUN_WEATHER_TOKEN")) {
+                return token;
+            }
+        }
+        return "YOUR_CAIYUN_WEATHER_TOKEN";
+    }
+
     public void startServer() {
         try {
             if (!isAlive()) {
@@ -185,7 +209,7 @@ public class McpServer extends NanoHTTPD {
             double latitude = coordinates[1];
             
             // 彩云天气API token (需要替换为实际的token)
-            String token = "QcevZCCHjrbDtgsP";
+            String token = getCaiyunWeatherToken();
             
             // 构建API URL
             String url = String.format("https://api.caiyunapp.com/v2.5/%s/%f,%f/weather.json", 

@@ -82,9 +82,30 @@ MCP (Model Context Protocol) 是一种允许AI模型与工具交互的协议。�
 
 1. **DeepSeek API密钥**：
    - 在`DeepSeekFunctionCaller.java`中设置`DEEPSEEK_API_KEY`
+   - 请将`YOUR_DEEPSEEK_API_KEY`替换为您自己的DeepSeek API密钥
+   - 或者在`app/src/main/assets/api_keys.properties`中配置
 
 2. **彩云天气Token**：
-   - 在`McpServer.java`中设置`YOUR_CAIYUN_APP_TOKEN`
+   - 在`McpServer.java`中设置`YOUR_CAIYUN_WEATHER_TOKEN`
+   - 请将`YOUR_CAIYUN_WEATHER_TOKEN`替换为您自己的彩云天气API Token
+   - 或者在`app/src/main/assets/api_keys.properties`中配置
+
+## 配置文件使用方法
+
+1. 复制示例配置文件：
+   ```
+   cp app/src/main/assets/api_keys.properties.example app/src/main/assets/api_keys.properties
+   ```
+
+2. 编辑`api_keys.properties`文件，填入您的实际API密钥：
+   ```
+   deepseek.api.key=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   caiyun.weather.token=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   ```
+
+## API密钥管理
+
+本应用使用`ApiKeyManager`工具类来管理API密钥，支持从配置文件中读取密钥。应用会优先从配置文件中读取密钥，如果配置文件中没有设置或设置的是占位符，则使用代码中的默认值。
 
 ## 项目结构
 
@@ -99,7 +120,11 @@ app/
 │   └── utils/                     # 工具类
 │       ├── DeepSeekFunctionCaller.java  # DeepSeek调用器
 │       ├── McpServer.java         # MCP服务器
-│       └── McpClient.java         # MCP客户端(用于测试)
+│       ├── McpClient.java         # MCP客户端(用于测试)
+│       └── ApiKeyManager.java     # API密钥管理器
+├── src/main/assets/
+│   ├── api_keys.properties        # API密钥配置文件
+│   └── api_keys.properties.example # API密钥配置示例文件
 └── src/main/res/                  # 资源文件
 ```
 
@@ -115,3 +140,4 @@ app/
 1. 应用需要网络权限才能获取天气数据
 2. 确保已正确设置API密钥和Token
 3. MCP服务器在应用启动时自动启动，在应用销毁时自动停止
+4. `api_keys.properties`文件已被添加到`.gitignore`中，不会被提交到代码仓库
