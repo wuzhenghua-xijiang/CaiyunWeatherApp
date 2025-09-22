@@ -141,3 +141,4 @@ app/
 2. 确保已正确设置API密钥和Token
 3. MCP服务器在应用启动时自动启动，在应用销毁时自动停止
 4. `api_keys.properties`文件已被添加到`.gitignore`中，不会被提交到代码仓库
+
