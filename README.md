@@ -142,4 +142,8 @@ app/
 3. MCP服务器在应用启动时自动启动，在应用销毁时自动停止
 4. `api_keys.properties`文件已被添加到`.gitignore`中，不会被提交到代码仓库
 
-____验证一下____
+## 更新日志
+
+- 移除了McpClient中未使用的getWeatherForecast方法，保持代码整洁
+- 优化了MCP客户端实现，提高代码质量
+- 完善了API密钥管理机制，使用配置文件和ApiKeyManager管理API密钥，避免个人token泄露
