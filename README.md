@@ -148,5 +148,5 @@ app/
 - 优化了MCP客户端实现，提高代码质量
 - 完善了API密钥管理机制，使用配置文件和ApiKeyManager管理API密钥，避免个人token泄露
 - 更新了MCP模式实现，现在通过MCP客户端的tools/list方法动态获取工具列表，而不是使用写死的工具定义
-- 集成官方MCP Java SDK，提升MCP协议实现的标准化程度
+- 移除了对官方MCP Java SDK的依赖，使用自定义MCP实现以更好地适配Android环境
 - 改进了MCP工具调用流程，确保符合MCP协议规范
