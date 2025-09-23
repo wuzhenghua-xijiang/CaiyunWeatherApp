@@ -85,76 +85,88 @@ public class DeepSeekFunctionCaller {
      * 通过MCP模式获取天气预报
      */
     private static void getWeatherForecastWithMcp(String location, WeatherCallback callback) {
-        // 创建请求体
-        JsonObject requestBody = new JsonObject();
-        requestBody.addProperty("model", "deepseek-chat");
-        requestBody.add("messages", createMessages(location, true));
-        requestBody.add("tools", createMcpFunctions());  // 使用MCP函数
-        requestBody.addProperty("temperature", 0.0);
-        
-        // 将JsonObject转换为RequestBody
-        String json = requestBody.toString();
-        RequestBody body = RequestBody.create(MediaType.parse("application/json"), json);
-        
-        // 创建OkHttpClient实例并配置超时时间
-        OkHttpClient client = new OkHttpClient.Builder()
-                .connectTimeout(120, TimeUnit.SECONDS)
-                .readTimeout(120, TimeUnit.SECONDS)
-                .writeTimeout(120, TimeUnit.SECONDS)
-                .retryOnConnectionFailure(true)
-                .followRedirects(true)
-                .followSslRedirects(true)
-                .build();
-        
-        // 创建请求
-        okhttp3.Request request = new okhttp3.Request.Builder()
-                .url("https://api.deepseek.com/chat/completions")
-                .post(body)
-                .addHeader("Authorization", "Bearer " + getApiKey())
-                .addHeader("Content-Type", "application/json")
-                .build();
-        
-        // 发送异步请求
-        client.newCall(request).enqueue(new okhttp3.Callback() {
-            @Override
-            public void onFailure(okhttp3.Call call, IOException e) {
-                // 特别处理网络超时错误
-                if (e instanceof java.net.SocketTimeoutException) {
-                    callback.onError("DeepSeek API请求超时，请检查网络连接或稍后重试");
-                } else if (e instanceof java.net.UnknownHostException) {
-                    callback.onError("无法连接到DeepSeek API，请检查网络设置");
-                } else {
-                    callback.onError("DeepSeek API调用失败: " + e.getMessage());
-                }
+        // 首先获取MCP服务器的工具列表
+        McpClient mcpClient = McpClient.getInstance();
+        mcpClient.listTools().thenAccept(toolsResponse -> {
+            if (toolsResponse.has("error")) {
+                callback.onError("获取MCP工具列表失败: " + toolsResponse.toString());
+                return;
             }
             
-            @Override
-            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws IOException {
-                if (response.isSuccessful() && response.body() != null) {
-                    try {
-                        String responseBody = response.body().string();
-                        handleMcpFunctionCallResponse(responseBody, callback);
-                    } catch (Exception e) {
-                        callback.onError("解析响应失败: " + e.getMessage());
-                    }
-                } else {
-                    String errorBody = "";
-                    if (response.body() != null) {
-                        try {
-                            errorBody = response.body().string();
-                        } catch (IOException e) {
-                            // 忽略读取错误体的异常
-                        }
-                    }
-                    
-                    // 特别处理429错误（API配额用完）
-                    if (response.code() == 429) {
-                        callback.onError("DeepSeek API调用失败：API配额已用完，请稍后再试");
+            // 创建请求体
+            JsonObject requestBody = new JsonObject();
+            requestBody.addProperty("model", "deepseek-chat");
+            requestBody.add("messages", createMessages(location, true));
+            requestBody.add("tools", createMcpFunctionsFromResponse(toolsResponse));  // 使用从MCP服务器获取的工具列表
+            requestBody.addProperty("temperature", 0.0);
+            
+            // 将JsonObject转换为RequestBody
+            String json = requestBody.toString();
+            RequestBody body = RequestBody.create(MediaType.parse("application/json"), json);
+            
+            // 创建OkHttpClient实例并配置超时时间
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .connectTimeout(120, TimeUnit.SECONDS)
+                    .readTimeout(120, TimeUnit.SECONDS)
+                    .writeTimeout(120, TimeUnit.SECONDS)
+                    .retryOnConnectionFailure(true)
+                    .followRedirects(true)
+                    .followSslRedirects(true)
+                    .build();
+            
+            // 创建请求
+            okhttp3.Request request = new okhttp3.Request.Builder()
+                    .url("https://api.deepseek.com/chat/completions")
+                    .post(body)
+                    .addHeader("Authorization", "Bearer " + getApiKey())
+                    .addHeader("Content-Type", "application/json")
+                    .build();
+            
+            // 发送异步请求
+            client.newCall(request).enqueue(new okhttp3.Callback() {
+                @Override
+                public void onFailure(okhttp3.Call call, IOException e) {
+                    // 特别处理网络超时错误
+                    if (e instanceof java.net.SocketTimeoutException) {
+                        callback.onError("DeepSeek API请求超时，请检查网络连接或稍后重试");
+                    } else if (e instanceof java.net.UnknownHostException) {
+                        callback.onError("无法连接到DeepSeek API，请检查网络设置");
                     } else {
-                        callback.onError("DeepSeek API调用失败，状态码: " + response.code() + "，错误信息: " + errorBody);
+                        callback.onError("DeepSeek API调用失败: " + e.getMessage());
                     }
                 }
-            }
+                
+                @Override
+                public void onResponse(okhttp3.Call call, okhttp3.Response response) throws IOException {
+                    if (response.isSuccessful() && response.body() != null) {
+                        try {
+                            String responseBody = response.body().string();
+                            handleMcpFunctionCallResponse(responseBody, callback);
+                        } catch (Exception e) {
+                            callback.onError("解析响应失败: " + e.getMessage());
+                        }
+                    } else {
+                        String errorBody = "";
+                        if (response.body() != null) {
+                            try {
+                                errorBody = response.body().string();
+                            } catch (IOException e) {
+                                // 忽略读取错误体的异常
+                            }
+                        }
+                        
+                        // 特别处理429错误（API配额用完）
+                        if (response.code() == 429) {
+                            callback.onError("DeepSeek API调用失败：API配额已用完，请稍后再试");
+                        } else {
+                            callback.onError("DeepSeek API调用失败，状态码: " + response.code() + "，错误信息: " + errorBody);
+                        }
+                    }
+                }
+            });
+        }).exceptionally(throwable -> {
+            callback.onError("获取MCP工具列表失败: " + throwable.getMessage());
+            return null;
         });
     }
     
@@ -278,15 +290,9 @@ public class DeepSeekFunctionCaller {
                 if (weatherResponse.has("error")) {
                     callback.onError("获取天气数据失败: " + weatherResponse.toString());
                 } else {
-                    try {
-                        // 提取天气数据
-                        JsonObject result = weatherResponse.getAsJsonObject("result");
-                        JsonObject data = result.getAsJsonObject("data");
-                        String weatherData = data.toString();
-                        callback.onSuccess(weatherData);
-                    } catch (Exception e) {
-                        callback.onError("解析天气数据失败: " + e.getMessage());
-                    }
+                    // 提取天气数据
+                    String weatherData = weatherResponse.toString();
+                    callback.onSuccess(weatherData);
                 }
             }).exceptionally(throwable -> {
                 callback.onError("获取天气数据失败: " + throwable.getMessage());
@@ -686,7 +692,72 @@ public class DeepSeekFunctionCaller {
     }
     
     /**
-     * 创建MCP函数定义
+     * 根据MCP服务器响应创建MCP函数定义
+     */
+    private static JsonArray createMcpFunctionsFromResponse(JsonObject toolsResponse) {
+        JsonArray functions = new JsonArray();
+        
+        try {
+            // 从响应中提取工具列表
+            if (toolsResponse.has("result") && toolsResponse.getAsJsonObject("result").has("tools")) {
+                JsonArray tools = toolsResponse.getAsJsonObject("result").getAsJsonArray("tools");
+                
+                // 遍历工具列表，创建函数定义
+                for (int i = 0; i < tools.size(); i++) {
+                    JsonObject tool = tools.get(i).getAsJsonObject();
+                    
+                    // 创建函数包装对象
+                    JsonObject functionWrapper = new JsonObject();
+                    functionWrapper.addProperty("type", "function");
+                    
+                    // 创建实际的函数定义
+                    JsonObject function = new JsonObject();
+                    function.addProperty("name", tool.has("name") ? tool.get("name").getAsString() : MCP_FUNCTION_NAME);
+                    function.addProperty("description", tool.has("description") ? tool.get("description").getAsString() : "通过调用MCP服务器获取指定位置的24小时天气预报");
+                    
+                    // 处理参数定义
+                    if (tool.has("inputSchema")) {
+                        function.add("parameters", tool.get("inputSchema"));
+                    } else {
+                        // 如果没有inputSchema，使用默认参数
+                        JsonObject parameters = new JsonObject();
+                        parameters.addProperty("type", "object");
+                        
+                        JsonObject properties = new JsonObject();
+                        JsonObject locationProp = new JsonObject();
+                        locationProp.addProperty("type", "string");
+                        locationProp.addProperty("description", "地理位置，例如：北京、上海等");
+                        properties.add("location", locationProp);
+                        
+                        parameters.add("properties", properties);
+                        JsonArray required = new JsonArray();
+                        required.add("location");
+                        parameters.add("required", required);
+                        
+                        function.add("parameters", parameters);
+                    }
+                    
+                    // 将函数定义添加到包装对象中
+                    functionWrapper.add("function", function);
+                    
+                    // 将包装对象添加到函数数组中
+                    functions.add(functionWrapper);
+                }
+            } else {
+                // 如果无法从响应中提取工具列表，使用默认的函数定义
+                return createMcpFunctions();
+            }
+        } catch (Exception e) {
+            // 如果解析过程中出现错误，使用默认的函数定义
+            Log.e("DeepSeekFunctionCaller", "解析MCP工具列表失败，使用默认函数定义", e);
+            return createMcpFunctions();
+        }
+        
+        return functions;
+    }
+    
+    /**
+     * 创建MCP函数定义（默认实现）
      */
     private static JsonArray createMcpFunctions() {
         JsonArray functions = new JsonArray();
